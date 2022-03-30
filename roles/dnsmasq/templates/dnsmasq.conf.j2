@@ -1,0 +1,13 @@
+port=53
+listen-address={{ dns_server }}
+bind-interfaces
+domain-needed
+bogus-priv
+dnssec
+no-hosts
+dns-forward-max=150
+cache-size=1000
+neg-ttl=3600
+no-poll
+server=8.8.8.8
+server=8.8.4.4

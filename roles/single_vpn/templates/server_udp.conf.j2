@@ -1,0 +1,36 @@
+dev tun0
+port {{ openvpn_port }}
+proto udp
+persist-tun
+persist-key
+server 10.11.0.0 255.255.255.0
+management 127.0.0.1 7505
+duplicate-cn
+#enternode fix route less
+#speed tuning
+sndbuf 393216
+rcvbuf 393216
+push "sndbuf 393216"
+push "rcvbuf 393216"
+tun-mtu 1472
+push "redirect-gateway def1"
+push "dhcp-option DNS {{ dns_server }}"
+#push "block-outside-dns"
+ping-timer-rem
+keepalive 10 60
+# Use compression
+#comp-lzo
+#define crypt..
+auth SHA512
+cipher AES-256-CBC
+tls-cipher TLS-DHE-RSA-WITH-AES-256-GCM-SHA384
+# handshake crypt
+tls-server
+tls-auth ssl/ta.key 0
+dh ssl/dh.pem
+cert ssl/server.pem
+key ssl/server.key
+ca ssl/ca.crt
+verb 0
+#log /dev/null
+#status /dev/null

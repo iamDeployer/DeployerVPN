@@ -1,0 +1,7 @@
+- name: OpenVPN ON OFF
+  hosts: all
+  become: yes
+  vars:
+  
+  roles:
+    - ovpn_on_off

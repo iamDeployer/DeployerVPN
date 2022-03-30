@@ -1,0 +1,31 @@
+---
+# defaults file for single_vpn
+easyrsa_version: "3.0.1"
+easyrsa_dest: "/usr/share/easy-rsa"
+
+easyrsa_dn: "cn_only"
+easyrsa_req_country: "US"
+easyrsa_req_province: "California"
+easyrsa_req_city: "San Francisco"
+easyrsa_req_org: "Copyleft Certificate Co"
+easyrsa_req_email: "test@test.test"
+easyrsa_req_ou: "My Organizational Unit"
+easyrsa_req_cn: "server"
+
+easyrsa_keysize: 4096
+easyrsa_digest: "sha512"
+
+easyrsa_clients:
+  - name: client
+
+easyrsa_remove_old_keys: no
+
+openvpn_port: 443
+# протоколы оба используем, пока уброл эту переменную
+# openvpn_protocol: udp
+nat_tun: eth0
+profile_path: ~/openvpn_profiles
+
+openvpn_udp_net: 10.11.0.0
+dns_server: 10.11.0.1
+

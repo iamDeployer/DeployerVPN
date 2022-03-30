@@ -1,0 +1,8 @@
+- name: Install dmsmasq
+  hosts: all
+  become: yes
+  vars:
+  
+  roles:
+    - single_vpn
+    - dnsmasq

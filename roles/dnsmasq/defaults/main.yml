@@ -1,0 +1,4 @@
+---
+# defaults file for dnsmasq
+dnsmasq_service_state: "{{ service_default_state | default('started') }}"
+dnsmasq_service_enabled: "{{ service_default_enabled | default(true) }}"

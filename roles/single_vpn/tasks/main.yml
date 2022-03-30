@@ -1,0 +1,233 @@
+---
+# tasks file for single_vpn
+- name: Update apt-get repo and cache
+  apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+- name: Upgrade all apt packages
+  apt: upgrade=dist force_apt_get=yes
+- name: Check if a reboot is needed for Debian and Ubuntu boxes
+  register: reboot_required_file
+  stat: path=/var/run/reboot-required get_md5=no
+- name: Reboot the Debian or Ubuntu server
+  reboot:
+    msg: "Reboot initiated by Ansible due to kernel updates"
+    connect_timeout: 5
+    reboot_timeout: 300
+    pre_reboot_delay: 0
+    post_reboot_delay: 30
+    test_command: uptime
+  when: reboot_required_file.stat.exists
+- name: deploy /etc/apt/sources.list.d/torproject.list
+  template:
+    src: "torproject.j2"
+    dest: /etc/apt/sources.list.d/torproject.list
+    owner: root
+    group: root
+    mode: 0644
+- name: "Add Tor repo GPG signing key to Apt"
+  apt_key:
+    url: "https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc"
+    id: A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89
+    state: present
+- name: Install required system packages
+  apt:
+    name: "{{item}}"
+    state: present
+    update_cache: yes
+  loop:
+        - openvpn
+        - git
+
+- name: "Download easy-rsa from GitHub"
+  git:
+    repo: "https://github.com/OpenVPN/easy-rsa.git"
+    dest: "{{easyrsa_dest}}"
+    version: "{{easyrsa_version}}"
+
+- name: "Configure easy-rsa"
+  template:
+    src: vars.j2
+    dest: "{{easyrsa_dest}}/easyrsa3/vars"
+
+- name: "Remove old all keys"
+  file:
+    path: "{{easyrsa_dest}}/easyrsa3/pki"
+    state: absent
+
+- name: "Initialize pki"
+  command: ./easyrsa init-pki
+  args:
+    chdir: "{{easyrsa_dest}}/easyrsa3"
+    creates: "{{easyrsa_dest}}/easyrsa3/pki"
+
+- name: "Build CA keys"
+  command: ./easyrsa build-ca nopass
+  args:
+    chdir: "{{easyrsa_dest}}/easyrsa3"
+    creates: "{{easyrsa_dest}}/easyrsa3/pki/private/ca.key"
+
+- name: "Generate the server certificate/key"
+  command: ./easyrsa --req-cn=server gen-req server nopass
+  args:
+    chdir: "{{easyrsa_dest}}/easyrsa3"
+    creates: "{{easyrsa_dest}}/easyrsa3/pki/private/server.key"
+
+- name: "Get the new CA to sign our server key"
+  command: ./easyrsa sign-req server server
+  args:
+    chdir: "{{easyrsa_dest}}/easyrsa3"
+    creates: "{{easyrsa_dest}}/easyrsa3/pki/issued/server.crt"
+
+- name: Convert to pem server.crt
+  become: yes
+  shell: openssl x509 -in "{{easyrsa_dest}}/easyrsa3/pki/issued/server.crt" -out "{{easyrsa_dest}}/easyrsa3/pki/issued/server.pem" && rm "{{easyrsa_dest}}/easyrsa3/pki/issued/server.crt"
+  args:
+    chdir: "{{easyrsa_dest}}/easyrsa3"
+    creates: "{{easyrsa_dest}}/easyrsa3/pki/issued/server.pem"
+
+- name: "Create the client keys"
+  command: ./easyrsa --req-cn=client gen-req client nopass
+  args:
+    chdir: "{{easyrsa_dest}}/easyrsa3"
+    creates: "{{easyrsa_dest}}/easyrsa3/pki/private/client.key"
+
+- name: "Get the certificate authority to sign the client request"
+  command: ./easyrsa sign-req client client
+  args:
+    chdir: "{{easyrsa_dest}}/easyrsa3"
+    creates: "{{easyrsa_dest}}/easyrsa3/pki/issued/client.crt"
+
+- name: Convert to pem client.crt
+  become: yes
+  shell:  openssl x509 -in "{{easyrsa_dest}}/easyrsa3/pki/issued/client.crt" -out "{{easyrsa_dest}}/easyrsa3/pki/issued/client.pem" && rm "{{easyrsa_dest}}/easyrsa3/pki/issued/client.crt"
+  args:
+    chdir: "{{easyrsa_dest}}/easyrsa3"
+    creates: "{{easyrsa_dest}}/easyrsa3/pki/issued/client.pem"
+
+- name: "Gen openvpn tls key"
+  become: yes
+  shell: "openvpn --genkey --secret ta.key"
+  args:
+    chdir: "{{easyrsa_dest}}/easyrsa3/pki/private"
+    creates: "{{easyrsa_dest}}/easyrsa3/pki/private/ta.key"
+
+- name: "Generate the DH keys"
+  command: ./easyrsa gen-dh
+  args:
+    chdir: "{{easyrsa_dest}}/easyrsa3"
+    creates: "{{easyrsa_dest}}/easyrsa3/pki/dh.pem"
+  with_items: "{{ easyrsa_clients }}"
+
+#create openvpn configuration
+#copy keys
+- name: copy keys | create folder
+  file:
+    path: /etc/openvpn/ssl
+    state: directory
+
+- name: copy key dh
+  copy:
+    remote_src: true
+    src: "{{easyrsa_dest}}/easyrsa3/pki/dh.pem"
+    dest: "/etc/openvpn/ssl/dh.pem"
+    force: yes
+
+- name: copy keys server/ca/ta
+  copy:
+    src: "{{easyrsa_dest}}/easyrsa3/pki/{{ item.src }}"
+    dest: "/etc/openvpn/ssl/{{ item.dest }}"
+    force: yes
+    remote_src: true
+  with_items:
+    - { src: "private/server.key", dest: "server.key" }
+    - { src: "issued/server.pem", dest: "server.pem" }
+    - { src: "private/ta.key", dest: "ta.key" }
+    - { src: "ca.crt", dest: "ca.crt" }
+  tags: rebuild_keys
+
+- name: Generate Openvpn UDP server configuration
+  template:
+    src: server_udp.conf.j2
+    dest: /etc/openvpn/server_udp.conf
+  #notify:
+  #  - restart openvpn
+
+- name: Generate Openvpn TCP server configuration
+  template:
+    src: server_tcp.conf.j2
+    dest: /etc/openvpn/server_tcp.conf
+
+- name: get ta.key
+  command: cat {{easyrsa_dest}}/easyrsa3/pki/private/ta.key
+  register: tls_server_key
+
+- name: get ca.crt
+  command: cat {{easyrsa_dest}}/easyrsa3/pki/ca.crt
+  register: ca_server_crt
+
+- name: get client.pem
+  command: cat {{easyrsa_dest}}/easyrsa3/pki/issued/client.pem
+  register: client_crt
+
+- name: get client.key
+  command: cat {{easyrsa_dest}}/easyrsa3/pki/private/client.key
+  register: client_key
+
+- name: create openvpn config folder
+  file:
+    path: "{{easyrsa_dest}}/openvpn_profiles"
+    mode: "u=rw,g=rx,o=rx"
+    state: directory
+
+- name: build client profile 
+  template:
+    src: client.conf.j2
+    dest: "{{easyrsa_dest}}/openvpn_profiles/client.ovpn"
+    owner: "{{ ansible_user }}"
+
+- name: fetch client configs
+  fetch:
+    src: "{{easyrsa_dest}}/openvpn_profiles/client.ovpn"
+    dest: "{{ profile_path }}/client.ovpn"
+    flat: yes
+
+- name: network | ip_forward allow
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+- name: network |  NAT rules | enternode or standalone
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    out_interface: "{{nat_tun}}"
+    source: "{{item}}/24"
+    jump: MASQUERADE
+  with_items:
+      - "{{openvpn_udp_net}}"
+  become: yes
+
+- name: network | allow all in vpn INPUT
+  iptables:
+    chain: INPUT
+    protocol: all
+    in_interface: tun+
+    jump: ACCEPT
+  become: yes
+
+- name: network | allow all in vpn OUTPUT
+  iptables:
+    chain: OUTPUT
+    protocol: all
+    out_interface: tun+
+    jump: ACCEPT
+  become: yes
+
+- name: Start OpenVPN server
+  service:
+    name: openvpn
+    state: restarted
+    daemon-reload: yes
+    enabled: true

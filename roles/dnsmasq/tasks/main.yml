@@ -1,0 +1,43 @@
+---
+# tasks file for dnsmasq
+- name: install dependencies
+  apt:
+    name: "{{ dnsmasq_dependencies }}"
+    state: "{{ apt_install_state | default('latest') }}"
+    update_cache: true
+    cache_valid_time: "{{ apt_update_cache_valid_time | default(3600) }}"
+
+- name: create resolv-file for dnsmasq
+  copy:
+    content: |
+      nameserver 8.8.8.8
+      nameserver 8.8.4.4
+    dest: /run/dnsmasq/resolv.conf
+
+- name: update configuration file(s)
+  template:
+    src: dnsmasq.conf.j2
+    dest: "/etc/dnsmasq.conf"
+    owner: root
+    group: root
+    mode: 0644
+    validate: 'dnsmasq --test -C %s'
+  notify: restart dnsmasq
+
+- name: stop and disable (systemd-resolved) service
+  service:
+    name: systemd-resolved
+    state: stopped
+    enabled: false
+
+- name: stop and disable (resolvconf) service
+  service:
+    name: resolvconf
+    state: stopped
+    enabled: false
+
+- name: start and enable service
+  service:
+    name: dnsmasq
+    state: "{{ dnsmasq_service_state }}"
+    enabled: "{{ dnsmasq_service_enabled | bool }}"

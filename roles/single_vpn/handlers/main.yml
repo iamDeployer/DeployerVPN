@@ -1,0 +1,7 @@
+---
+# handlers file for single_vpn
+- name: restart openvpn
+  systemd:
+    name: openvpn
+    state: restarted
+    daemon-reload: yes

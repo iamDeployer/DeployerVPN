@@ -1,0 +1,33 @@
+client
+dev tun
+persist-key
+persist-tun
+nobind
+remote {{ ansible_host }} {{ openvpn_port }} udp
+remote {{ ansible_host }} {{ openvpn_port }} tcp
+tls-client
+verb 0
+auth-nocache
+tun-mtu 1472
+tls-cipher TLS-DHE-RSA-WITH-AES-256-GCM-SHA384
+data-ciphers AES-256-CBC
+auth SHA512
+remote-cert-tls server
+key-direction 1
+tls-client
+verb 0
+auth-nocache
+remote-cert-tls server
+key-direction 1
+<tls-auth>
+{{tls_server_key.stdout}}
+</tls-auth>
+<ca>
+{{ca_server_crt.stdout}}
+</ca>
+<cert>
+{{client_crt.stdout}}
+</cert>
+<key>
+{{client_key.stdout}}
+</key>

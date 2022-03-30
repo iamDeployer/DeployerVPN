@@ -1,0 +1,7 @@
+---
+# tasks file for ovpn_on_off
+- name: start or stop and enable or disable service
+  service:
+    name: openvpn
+    state: "{{ ovpn_service_state }}"
+    enabled: "{{ ovpn_service_enabled | bool }}"

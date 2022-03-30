@@ -1,0 +1,8 @@
+---
+- name: Install Single Openvpn
+  hosts: all
+  become: yes
+  vars:
+  
+  roles:
+    - single_vpn
