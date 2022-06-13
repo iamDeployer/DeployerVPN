@@ -1,2 +1,2 @@
 # DeployerVPN
-Deployment VPN using ansible playbooks.
+Deployment VPN using ansible playbooks
