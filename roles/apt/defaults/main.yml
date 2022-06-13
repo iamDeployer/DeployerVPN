@@ -1,0 +1,14 @@
+# roles/apt/defaults/main.yml
+---
+# set_standart_sources: false
+set_torproject_sources: false
+# set_backports_sources: false
+# set_openvpn_sources: false
+update: false
+auto_sec_updates: false
+upgrade: false
+upgrade_type: 'safe'
+clean: false
+autoremove: false
+install_packages: []
+remove_packages: []

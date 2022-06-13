@@ -1,0 +1,7 @@
+---
+#requirements:
+os_req: "Debian"
+ram_req: "0"
+cpu_req: "0"
+hdd_req: "0"
+hypervisor_check: "false"

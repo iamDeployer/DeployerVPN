@@ -1,0 +1,7 @@
+---
+# vars file for logs
+syslog_service_state: "{{ service_default_state | default('stopped') }}"
+syslog_service_enabled: "{{ service_default_enabled | default(false) }}"
+
+rsyslog_service_state: "{{ service_default_state | default('stopped') }}"
+rsyslog_service_enabled: "{{ service_default_enabled | default(false) }}"

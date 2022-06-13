@@ -1,0 +1,110 @@
+#roles/openvpn/tasks/network.yml
+---
+- name: network | ip_forward allow
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+- name: network |  NAT rules | enternode or standalone
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    out_interface: "{{nat_tun}}"
+    source: "{{item}}/24"
+    jump: MASQUERADE
+  with_items:
+      - "{{openvpn_udp_net}}"
+      - "{{openvpn_tcp_net}}"
+  become: yes
+  notify: save iptables_rules
+  when: standalone or enternode
+
+- name: network |  NAT rules | middlenode or exitnode
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    out_interface: "{{nat_tun}}"
+    source: "{{item}}/24"
+    jump: MASQUERADE
+  with_items: "{{openvpn_udp_net}}"
+  become: yes
+  notify: save iptables_rules
+  when: middlenode or exitnode
+
+- name: network | torrents check rules
+  shell: iptables -t filter -L OUTPUT -n | grep '.torrent' | awk '{print $8}' | head -1
+  register: torrents_blocked
+  when: standalone or exitnode
+
+- name: network | block string match
+  command: iptables -I OUTPUT -m string --algo bm --string "{{item}}" -o tun+ -j DROP
+  with_items:
+      - "BitTorrent"
+      - "BitTorrent protocol"
+      - "peer_id="
+      - ".torrent"
+      - "torrent"
+      - "get_peers"
+      - "find_node"
+      - "announce.php?passkey="
+      - "announce_peer"
+      - "announce"
+      - "info_hash"
+      - "tracker"
+  when:
+    - standalone or exitnode
+    - (torrents_blocked is defined and torrents_blocked.stdout == "")
+    - torrents_block
+
+- name: block torrent-client ports | tcp
+  iptables:
+    chain: OUTPUT
+    protocol: tcp
+    out_interface: tun+
+    destination_port: '6881:6891'
+    jump: DROP
+  when:
+    - standalone or exitnode
+    - (torrents_blocked is defined and torrents_blocked.stdout == "")
+    - torrents_block
+
+- name: block torrent-client ports | udp
+  iptables:
+    chain: OUTPUT
+    protocol: udp
+    out_interface: tun+
+    destination_port: '6881:6891'
+    jump: DROP
+  notify: save iptables_rules
+  when:
+    - standalone or exitnode
+    - (torrents_blocked is defined and torrents_blocked.stdout == "")
+    - torrents_block
+
+- name: Firewall rule - block port ping traffic
+  iptables:
+    chain: INPUT
+    jump: DROP
+    protocol: icmp
+  notify: save iptables_rules
+  when:
+    - standalone or exitnode
+
+- name: network | allow all in vpn INPUT
+  iptables:
+    chain: INPUT
+    protocol: all
+    in_interface: tun+
+    jump: ACCEPT
+  become: yes
+
+- name: network | allow all in vpn OUTPUT
+  iptables:
+    chain: OUTPUT
+    protocol: all
+    out_interface: tun+
+    jump: ACCEPT
+  become: yes

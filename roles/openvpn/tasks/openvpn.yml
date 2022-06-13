@@ -1,0 +1,252 @@
+
+---
+- name: "Download easy-rsa from GitHub"
+  git:
+    repo: "https://github.com/OpenVPN/easy-rsa.git"
+    dest: "{{easyrsa_dest}}"
+    version: "{{easyrsa_version}}"
+
+- name: Copy openssl.cnf
+  copy:
+    src: "{{easyrsa_dir}}/openssl-1.0.cnf"
+    dest: "{{easyrsa_dir}}/openssl.cnf"
+    remote_src: yes
+
+#edit vars
+- name: easy-rsa 3.0 | edit vars KEY_SIZE to {{dh_param}} keysize
+  template:
+    src: openvpn/vars.j2
+    dest: "{{easyrsa_dir}}/vars"
+
+
+#PKI
+- name: easy-rsa 3.0 | pki exists check?
+  stat:
+    path: "{{easyrsa_keys_dir}}/ca.key"
+  register: pki_exist
+  tags: rebuild_keys
+
+- name:  easy-rsa 3.0 | Remove old all keys
+  file:
+    path: "{{easyrsa_dir}}/pki"
+    state: absent
+
+- name: easy-rsa 3.0 | Initialize pki
+  command: ./easyrsa init-pki
+  args:
+    chdir: "{{easyrsa_dir}}"
+    creates: "{{easyrsa_dir}}/pki"
+
+- name: easy-rsa 3.0 | create ca
+  command: ./easyrsa build-ca nopass
+  args:
+    chdir: "{{easyrsa_dir}}"
+    creates: "{{easyrsa_keys_dir}}/ca.key"
+  when: pki_exist.stat.exists == False
+  tags: rebuild_keys
+
+##SERVER
+- name: easy-rsa 3.0 | {{server_cert_name}} keys check
+  stat:
+    path: "{{easyrsa_keys_dir}}/{{server_cert_name}}.pem"
+  register: server_cert_exist
+  tags: rebuild_keys
+
+- name: easy-rsa 3.0 | search {{server_cert_name}} keys
+  find:
+    paths: "{{easyrsa_keys_dir}}"
+    patterns: "{{server_cert_name}}.*"
+  register: serverfiles
+  when: server_cert_exist.stat.exists == False
+  ignore_errors: true
+  tags: rebuild_keys
+
+- name: rm all keys by mask {{server_cert_name}}.* if have no pem key
+  file:
+    path: "{{item.path}}"
+    state: absent
+  when: server_cert_exist.stat.exists == False
+  with_items: "{{ serverfiles.files }}"
+  ignore_errors: true
+  tags: rebuild_keys
+
+- name: easy-rsa 3.0 | fix index.txt
+  lineinfile:
+    dest: "{{easyrsa_keys_dir}}/index.txt"
+    regexp: "CN={{server_cert_name}}"
+    state: absent
+  when: server_cert_exist.stat.exists == False
+  tags: rebuild_keys
+
+- name: easy-rsa 3.0 | create {{server_cert_name}} keys
+  become: yes
+  command: ./easyrsa --req-cn=server gen-req server nopass
+  args:
+    chdir: "{{easyrsa_dir}}"
+    creates: "{{easyrsa_dest}}/easyrsa3/pki/private/server.key"
+  when: server_cert_exist.stat.exists == False
+  tags: rebuild_keys  
+
+- name: easy-rsa 3.0 | Get the new CA to sign our server key
+  command: ./easyrsa sign-req server server
+  args:
+    chdir: "{{easyrsa_dest}}/easyrsa3"
+    creates: "{{easyrsa_dest}}/easyrsa3/pki/issued/server.crt"
+  when: server_cert_exist.stat.exists == False
+  tags: rebuild_keys  
+
+- name: easy-rsa 3.0 | convert to pem {{server_cert_name}}
+  become: yes
+  shell: openssl x509 -in "{{easyrsa_dest}}/easyrsa3/pki/issued/server.crt" -out "{{easyrsa_dest}}/easyrsa3/pki/issued/server.pem" && rm "{{easyrsa_dest}}/easyrsa3/pki/issued/server.crt"
+  args:
+    chdir: "{{easyrsa_dest}}/easyrsa3"
+    creates: "{{easyrsa_dest}}/easyrsa3/pki/issued/server.pem"
+  when: server_cert_exist.stat.exists == False
+  tags: rebuild_keys
+
+##CLIENT
+- name: easy-rsa 2.0 | {{client_cert_name}} keys check
+  stat:
+    path: "{{easyrsa_keys_dir}}/{{client_cert_name}}.pem"
+  register: client_cert_exist
+  tags: rebuild_keys
+
+- name: easy-rsa 2.0 | search {{client_cert_name}} keys
+  find:
+    paths: "{{easyrsa_keys_dir}}"
+    patterns: "{{client_cert_name}}.*"
+  register: clientfiles
+  when: client_cert_exist.stat.exists == False
+  ignore_errors: true
+  tags: rebuild_keys
+
+- name: rm all keys by mask {{client_cert_name}}.* if have no pem key
+  file:
+    path: "{{item.path}}"
+    state: absent
+  when: client_cert_exist.stat.exists == False
+  with_items: "{{ clientfiles.files }}"
+  ignore_errors: true
+  tags: rebuild_keys
+
+- name: easy-rsa 3.0 | create {{client_cert_name}} keys
+  command: ./easyrsa --req-cn=client gen-req client nopass
+  args:
+    chdir: "{{easyrsa_dest}}/easyrsa3"
+    creates: "{{easyrsa_dest}}/easyrsa3/pki/private/client.key"
+  when: client_cert_exist.stat.exists == False
+  tags: rebuild_keys
+
+- name: "Get the certificate authority to sign the client request"
+  command: ./easyrsa sign-req client client
+  args:
+    chdir: "{{easyrsa_dest}}/easyrsa3"
+    creates: "{{easyrsa_dest}}/easyrsa3/pki/issued/client.crt"
+  when: client_cert_exist.stat.exists == False
+  tags: rebuild_keys
+
+- name: easy-rsa 3.0 | convert to pem {{client_cert_name}}
+  become: yes
+  shell:  openssl x509 -in "{{easyrsa_dest}}/easyrsa3/pki/issued/client.crt" -out "{{easyrsa_dest}}/easyrsa3/pki/issued/client.pem" && rm "{{easyrsa_dest}}/easyrsa3/pki/issued/client.crt"
+  args:
+    chdir: "{{easyrsa_dest}}/easyrsa3"
+    creates: "{{easyrsa_dest}}/easyrsa3/pki/issued/client.pem"
+  when: client_cert_exist.stat.exists == False
+  tags: rebuild_keys
+
+##tls-key
+- name: tls key check
+  stat:
+    path: "{{easyrsa_dest}}/easyrsa3/pki/private/ta.key"
+  register: ta_exist
+  tags: rebuild_keys
+
+- name: Gen openvpn tls key
+  become: yes
+  shell: "openvpn --genkey --secret ta.key"
+  args:
+    chdir: "{{easyrsa_dest}}/easyrsa3/pki/private"
+    creates: "{{easyrsa_dest}}/easyrsa3/pki/private/ta.key"
+  when: ta_exist.stat.exists == False
+  tags: rebuild_keys
+
+#create openvpn configuration
+#copy keys
+- name: copy keys | create folder
+  file:
+    path: /etc/openvpn/ssl
+    state: directory
+
+- name: copy keys server/ta
+  copy:
+    remote_src: true
+    src: "{{easyrsa_dest}}/easyrsa3/pki/private/{{item}}"
+    dest: "/etc/openvpn/ssl/{{item}}"
+    force: yes
+  with_items:
+    - "{{server_cert_name}}.key"
+    - ta.key
+  tags: rebuild_keys
+
+- name: copy keys ca.crt
+  copy:
+    remote_src: true
+    src: "{{easyrsa_dest}}/easyrsa3/pki/{{item}}"
+    dest: "/etc/openvpn/ssl/{{item}}"
+    force: yes
+  with_items:
+    - ca.crt
+  tags: rebuild_keys
+
+- name: copy keys server.pem
+  copy:
+    remote_src: true
+    src: "{{easyrsa_dest}}/easyrsa3/pki/issued/{{item}}"
+    dest: "/etc/openvpn/ssl/{{item}}"
+    force: yes
+  with_items:
+    - "{{server_cert_name}}.pem" 
+  tags: rebuild_keys
+
+#create configs and scripts
+- name: deploy openvpn udp configuration
+  template:
+    src: openvpn/server_udp.conf.j2
+    dest: /etc/openvpn/server_udp.conf
+    force: yes
+
+- name: deploy openvpn configuration
+  template:
+    src: openvpn/server_tcp.conf.j2
+    dest: /etc/openvpn/server_tcp.conf
+    force: no
+  when: enternode or standalone
+
+- name: deploy upscript | start obfsproxy
+  template:
+    src: openvpn/upscript.sh.j2
+    dest: /etc/openvpn/upscript.sh
+    mode: "u=rw,g=rx,o=rx"
+    force: no
+  when: is_obfsproxy
+
+- name: deploy downscript | stop obfsproxy
+  template:
+    src: openvpn/downscript.sh.j2
+    dest: /etc/openvpn/downscript.sh
+    mode: "u=rw,g=rx,o=rx"
+    force: no
+  when: is_obfsproxy
+
+- name: multivpn | enternode | set routes
+  lineinfile:
+    dest: /etc/iproute2/rt_tables
+    line: "150 vpn"
+  when: enternode or middlenode
+
+- name: multivpn | enternode | set upscript
+  template:
+    src: openvpn/scripts/uproute.sh.j2
+    dest: /etc/openvpn/uproute.sh
+    mode: "u=rw,g=rx,o=rx"
+  when: enternode or middlenode

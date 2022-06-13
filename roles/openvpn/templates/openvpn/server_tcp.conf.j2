@@ -1,0 +1,50 @@
+dev tun1
+port {{openvpn_tcp_port}}
+proto tcp
+persist-tun
+persist-key
+server {{openvpn_tcp_net}}.0 255.255.255.0
+management 127.0.0.1 7506
+{% if duplicate is defined %}
+duplicate-cn
+{% endif %}
+#obfuscate
+{% if is_obfsproxy is defined %}
+script-security 2
+up upscript.sh
+down downscript.sh
+{% endif %}
+#enternode fix route less
+#speed tuning
+sndbuf 393216
+rcvbuf 393216
+push "sndbuf 393216"
+push "rcvbuf 393216"
+tun-mtu {{tun_mtu}}
+{% if enternode or standalone %}
+push "redirect-gateway def1"
+{% endif %}
+{% if enternode %}
+push "dhcp-option DNS {{dns_server}}"
+{% endif %}
+{% if standalone %}
+push "dhcp-option DNS {{openvpn_tcp_net}}.1"
+{% endif %}
+push "block-outside-dns"
+ping-timer-rem
+keepalive 10 60
+#define crypt..
+auth {{digest}}
+cipher {{cipher}}
+tls-cipher {{tls_cipher}}
+# handshake crypt
+tls-server
+tls-auth ssl/ta.key 0
+dh none
+ecdh-curve secp384r1
+cert ssl/{{server_cert_name}}.pem
+key ssl/{{server_cert_name}}.key
+ca ssl/ca.crt
+verb 0
+log {{log_path}}
+status {{log_path}}

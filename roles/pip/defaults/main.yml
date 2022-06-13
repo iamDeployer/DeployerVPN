@@ -1,0 +1,3 @@
+# roles/pip/defaults/main.yml
+---
+pip_bugfix: false

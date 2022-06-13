@@ -1,0 +1,15 @@
+# roles/os/tasks/crontab.yml
+---
+ - name: check mailto in crontab
+   command: grep "MAILTO" /etc/crontab
+   register: mailtocron
+   when: cron_configure
+   ignore_errors: true
+
+ - name: disable crontab email alerts
+   lineinfile:
+      dest: /etc/crontab
+      #regexp: "^PATH"
+      insertafter: "^PATH"
+      line: "MAILTO=\"\" "
+   when: (cron_configure == true and mailtocron.stdout == "")

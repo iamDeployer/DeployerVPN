@@ -1,0 +1,14 @@
+---
+
+- name: IPtables
+  hosts: all
+  become: yes
+  roles:
+  - role: iptables
+    vars:
+      open_tcp_ports: [ ]
+      open_udp_ports: [ ]
+      close_tcp_ports: [ ]
+      close_udp_ports: [ ]
+      is_allow_icmp_ping: false
+      is_save_rules: true

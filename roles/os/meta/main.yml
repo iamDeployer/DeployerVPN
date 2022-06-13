@@ -1,0 +1,33 @@
+# roles/os/meta/main.yml
+---
+dependencies:
+  - {role: apt,
+  upate: true,
+  install_packages: [ 'git', 'python3-pip' , 'kmod' , 'python3-setuptools' , 'python-setuptools' ],
+  when: pip_install
+  }
+
+  - {role: apt,
+  update: false,
+  install_packages: [ 'sudo' ],
+  when: use_sudo
+  }
+
+  - {role: apt,
+  update: false,
+  auto_sec_updates: true,
+  install_packages: [ 'unattended-upgrades' ],
+  when: security_updates
+  }
+
+  # ssh
+  - {role: iptables,
+  open_tcp_ports: [ '{{ansible_port}}' , '{{ssh_port}}'],
+  is_allow_input_related_and_established: true,
+  is_set_input_policy: true,
+  is_allow_icmp_ping: true,
+  is_set_forward_policy: true,
+  is_set_output_policy: true,
+  is_save_rules: true,
+  when: fw_configure
+  }

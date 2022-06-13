@@ -1,0 +1,31 @@
+# roles/os/tasks/rsyslog.yml
+---
+ - name: replace rsyslog configs
+   template: 
+      src: rsyslogd/rsyslog.conf.j2
+      dest: /etc/rsyslog.conf
+#   notify: 'restart rsyslog'
+   when: rsyslog_configure
+
+ - name: prepare for clearing rsyslog config and logfiles
+   find:
+      paths: 
+         - "/etc/rsyslog.d/"
+         - "/var/log/"
+      patterns: "*"
+      recurse: yes
+   register: result
+   when: rsyslog_configure
+
+ - name: remove them
+   file:
+      path: "{{item.path}}"
+      state: absent
+   with_items: "{{ result.files }}"
+   when: rsyslog_configure
+
+ - name: fix auth.log disabled
+   file: 
+      path: /var/log/auth.log
+      state: touch
+   when: rsyslog_configure

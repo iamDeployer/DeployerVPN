@@ -1,0 +1,34 @@
+---
+
+- name: Triple VPN | Enter Node
+  hosts: all
+  become: yes
+  roles:
+  - common
+  - role: openvpn
+    vars:
+      os_req: 'Debian'
+      ram_req: '450'
+      cpu_req: 1
+      hdd_req: "5120"
+      tun_check: true
+      clientname: triple
+      dns_server: "10.13.0.1"
+      profile_path: ~/openvpn_profiles
+      nat_tun: tun3
+      firewall_disable_ufw: true
+      openvpn_install: true
+      is_obfsproxy: false
+      enternode: true
+      duplicate: true
+      privoxy_install: true
+      obfs_type: obfs3
+      obfs_port: 21
+      obfs_local_port: 1025
+      nextsrv_client_profile: "{{ shared_folder_path }}/vpn_triple_hop2.conf"
+      dh_param: 2048
+      openvpn_udp_port: 443
+      openvpn_tcp_port: 443
+      openvpn_udp_net: 10.11.0
+      openvpn_tcp_net: 10.12.0
+

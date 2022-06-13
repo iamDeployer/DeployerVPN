@@ -1,0 +1,7 @@
+---
+  - include: openvpn.yml tags=openvpn
+  - include: network.yml tags=network
+  - include: client_package.yml
+  - include: dns-server.yml
+  - include: privoxy.yml
+  - include: ../../common/tasks/cleanup.yml

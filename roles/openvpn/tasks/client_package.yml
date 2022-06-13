@@ -1,0 +1,86 @@
+#roles/openvpn/tasks/client_package.yml
+---
+ - name: get ta.key
+   command: cat /usr/share/easy-rsa/easyrsa3/pki/private/ta.key
+   register: tls_server_key
+   tags: rebuild_keys
+
+ - name: get ca.crt
+   command: cat /usr/share/easy-rsa/easyrsa3/pki/ca.crt
+   register: ca_server_crt
+   tags: rebuild_keys
+
+ - name: get {{ client_cert_name }}.key
+   command: cat /usr/share/easy-rsa/easyrsa3/pki/private/{{client_cert_name}}.key
+   register: client_key
+   tags: rebuild_keys
+
+ - name: get {{client_cert_name}}.pem
+   command: cat /usr/share/easy-rsa/easyrsa3/pki/issued/{{client_cert_name}}.pem
+   register: client_pem
+   tags: rebuild_keys
+
+ - name: create openvpn config folder
+   file:
+     path: /usr/share/easy-rsa/openvpn_profiles
+     mode: "u=rw,g=rx,o=rx"
+     state: directory
+
+ - name: build client profile for client machine
+   template:
+     src: openvpn/client.conf.j2
+     dest: /usr/share/easy-rsa/openvpn_profiles/client-{{item.platform}}-{{item.obfuscated}}.{{item.conf_type}}
+     owner: "{{ ansible_user }}"
+   with_items:
+    # - { platform: 'linux', obfuscated: 'unmasked', conf_type: 'conf' }
+     - { platform: 'windows', obfuscated: 'unmasked', conf_type: 'ovpn' }
+    #  - { platform: 'linux', obfuscated: 'masked', conf_type: 'conf' }
+    #  - { platform: 'windows', obfuscated: 'masked', conf_type: 'ovpn' }
+   when: standalone or enternode
+   tags: rebuild_keys
+
+ - name: fetch client configs
+   fetch:
+     src: /usr/share/easy-rsa/openvpn_profiles/client-{{ item }}
+     dest: "{{ profile_path }}/{{ clientname }}-{{ item }}"
+     flat: yes
+   with_items:
+    #  - linux-unmasked.conf
+    #  - linux-masked.conf
+    #  - windows-masked.ovpn
+     - windows-unmasked.ovpn
+   when: standalone or enternode
+   tags: rebuild_keys
+
+ - name: build client profile in chain
+   template:
+     src: openvpn/client.conf.j2
+     dest: /usr/share/easy-rsa/openvpn_profiles/client.conf
+     owner: "{{ ansible_user }}"
+   when: exitnode or middlenode
+   tags: rebuild_keys
+
+ - name: fetch openvpn configs
+   fetch:
+     src: /usr/share/easy-rsa/openvpn_profiles/client.conf
+     dest: "{{ client_profile }}"
+     flat: yes
+   when: exitnode or middlenode
+   tags: rebuild_keys
+
+ - name: upload client config
+   copy:
+     src: "{{ nextsrv_client_profile }}"
+     dest: /etc/openvpn/client.conf
+   when: enternode or middlenode
+   tags: rebuild_keys
+
+ - name: CLEANUP | remove openvpn keys
+   shell: "/bin/rm -rf {{ item }}"
+   become: yes
+   args:
+    chdir: "/usr/share/easy-rsa/"
+   with_items:
+     - "easyrsa3/pki/*"
+     - "openvpn_profiles/*"
+   tags: rebuild_keys

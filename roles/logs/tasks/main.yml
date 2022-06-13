@@ -1,0 +1,22 @@
+---
+# tasks file for logs
+# - name: start or stop and enable or disable SYSLOG
+#   service:
+#     name: syslog
+#     state: "{{ syslog_service_state }}"
+#     enabled: "{{ syslog_service_enabled | bool }}"
+
+- name: start or stop and enable or disable RSYSLOG
+  service:
+    name: rsyslog
+    state: "{{ rsyslog_service_state }}"
+    enabled: "{{ rsyslog_service_enabled | bool }}"
+
+- name: Delete logs files
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /var/log/auth.log
+    - /var/log/syslog
+    - /var/log/dmesg

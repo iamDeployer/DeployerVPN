@@ -1,0 +1,21 @@
+# roles/os/tasks/logrotate.yml
+---
+ - name: setup logrotate |deploy main logrotate.conf
+   template: 
+      src: logrotate/logrotate.conf.j2
+      dest: /etc/logrotate.conf
+   when: logrotate_configure
+
+ - name: setup logrotate | deploy conf by app
+   template:
+      src: logrotate/{{item}}.j2
+      dest: /etc/logrotate.d/{{item}}
+   with_items:
+      - apt
+      - rsyslog
+      - aptitude
+      - dpkg
+      - exim4-base
+      - exim4-paniclog
+      - unattended-upgrades
+   when: logrotate_configure

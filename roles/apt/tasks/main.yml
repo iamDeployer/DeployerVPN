@@ -1,0 +1,96 @@
+# roles/apt/tasks/main.yml
+---
+#- name: deploy /etc/apt/sources.list.d/main_repo.list
+#  template:
+#    src: "sources.list.j2"
+#    dest: /etc/apt/sources.list.d/main_repo.list
+#    owner: root
+#    group: root
+#    mode: 0644
+#  tags: ["set_sources"]
+#  when: set_standart_sources
+
+# - name: deploy /etc/apt/sources.list.d/backports.list
+#   template:
+#     src: "sources.list.j2"
+#     dest: /etc/apt/sources.list.d/backports.list
+#     owner: root
+#     group: root
+#     mode: 0644
+#   tags: ["set_sources"]
+#   when: set_backports_sources
+
+- name: deploy /etc/apt/sources.list.d/torproject.list
+  template:
+    src: "sources.list.j2"
+    dest: /etc/apt/sources.list.d/torproject.list
+    owner: root
+    group: root
+    mode: 0644
+  tags: ["set_sources"]
+  when: set_torproject_sources
+
+- name: "Add Tor repo GPG signing key to Apt"
+  apt_key:
+    url: "https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc"
+    id: A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89
+    state: present
+  when: set_torproject_sources
+
+- name: update apt cache
+  apt:
+   update_cache: yes
+  tags: ["update"]
+  when: update
+
+- name: update apt cache
+  apt:
+   update_cache: yes
+   cache_valid_time: 3600
+  tags: ["update"]
+  when: update == false
+
+- name: upgrade server
+  apt:
+    upgrade: "{{ upgrade_type }}"
+    update_cache: yes
+  tags: ["upgrade"]
+  when: upgrade
+
+- name: "Install packages"
+  apt: name={{install_packages}} state=latest force=yes
+  when: install_packages
+
+- name: "Remove packages"
+  apt: name={{item}} state=absent
+  with_items:
+    - "{{remove_packages}}"
+  when: remove_packages
+
+#- name: clean /etc/apt/sources.list.d/*
+#  shell: rm -r /etc/apt/sources.list.d/*
+#  ignore_errors: true
+#  tags: ["set_sources"]
+#  when: set_standart_sources or set_backports_sources
+
+- name: apt clean
+  shell: apt-get -y clean
+  tags: ["clean"]
+  when: clean
+
+- name: apt autoremove
+  shell: apt-get -y autoremove
+  tags: ["autoremove"]
+  when: autoremove
+
+- name: Copy unattended-upgrades configuration files in place.
+  template:
+    src: "{{ item }}.j2"
+    dest: "/etc/apt/apt.conf.d/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - 10periodic
+    - 50unattended-upgrades
+  when: auto_sec_updates

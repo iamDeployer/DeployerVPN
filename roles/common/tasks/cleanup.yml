@@ -1,0 +1,9 @@
+---
+- name: CLEANUP | /tmp/*
+  shell: rm -rf /tmp/*
+  tags: rebuild_keys
+
+- name: reboot server
+  shell: echo  "reboot server last handler"
+  notify: reboot server
+  tags: rebuild_keys

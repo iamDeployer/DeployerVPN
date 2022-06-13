@@ -1,0 +1,35 @@
+# tasks file for network
+---
+- name: network | ip_forward allow
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+- name: network |  NAT rules | enternode or standalone
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    out_interface: "{{nat_tun}}"
+    source: "{{item}}/24"
+    jump: MASQUERADE
+  with_items:
+      - "{{openvpn_udp_net}}"
+      - "{{openvpn_tcp_net}}"
+  become: yes
+  notify: save iptables_rules
+  when: standalone or enternode
+
+- name: network |  NAT rules | middlenode or exitnode
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    out_interface: "{{nat_tun}}"
+    source: "{{item}}/24"
+    jump: MASQUERADE
+  with_items: "{{openvpn_udp_net}}"
+  become: yes
+  notify: save iptables_rules
+  when: middlenode or exitnode

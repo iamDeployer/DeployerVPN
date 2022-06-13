@@ -1,0 +1,6 @@
+#!/bin/sh
+{% if enternode %}
+ip rule add from {{openvpn_tcp_net}}/24 table vpn > /dev/null 2>&1
+{% endif %}
+ip rule add from {{openvpn_udp_net}}/24 table vpn > /dev/null 2>&1
+ip route add default dev {{nat_tun}} table vpn > /dev/null 2>&1

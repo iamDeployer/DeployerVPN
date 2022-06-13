@@ -1,0 +1,19 @@
+# roles/pip/tasks/main.yml
+---
+#- name: get-pip.py
+#  get_url:
+#    url: https://bootstrap.pypa.io/get-pip.py
+#    dest: /tmp/get-pip.py
+#    mode: 770
+#  when: pip_bugfix
+
+#- name: run get-pip.py
+#  command: python3.8 /tmp/get-pip.py
+#  when: pip_bugfix
+
+- name: "Install python packages"
+  pip: name="{{item}}" state=latest
+  with_items:
+    - "{{install_packages}}"
+  when: install_packages
+  tags: ["install"]

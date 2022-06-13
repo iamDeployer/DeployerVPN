@@ -1,0 +1,16 @@
+- name: Base OS settings for server
+  hosts: all
+  become: yes
+  roles:
+  - common
+  - {role: os,
+   pip_install: false,
+   fail2ban_install: false,
+   rsyslog_configure: false,
+   ssh_configure: true,
+   use_sudo: true,
+   logrotate_configure: false,
+   cron_configure: false,
+   security_updates: false,
+   fw_configure: true,
+  }

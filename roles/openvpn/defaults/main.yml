@@ -1,0 +1,72 @@
+#roles/openvpn/defaults/main.yml
+---
+#vpn type:
+  enternode: false
+  middlenode: false
+  exitnode: false
+  standalone: false
+#config vars:
+  duplicate: false
+#additional services:
+  privoxy_install: false
+  is_obfsproxy: false
+  #obfs_type: obfs3
+  obfs_port: ""
+  #obfs_local_port: 1025
+  dh_param: "1024"
+  #fix later, choose can template networks or not, try use not templated.
+  
+  # В этой папке будут файлы, которые шарятся между другими Playbook-ами.
+  shared_folder_path: ""
+  
+  # В эту папку складываются файлы, которые будут скачены пользователем.
+  profile_path: ""
+
+  openvpn_udp_port: ""
+  openvpn_tcp_port: ""
+  openvpn_udp_net: ""
+  openvpn_tcp_net: ""
+  dns_server: ""
+#split by vpn-chain place:
+##standalone:
+#  standalone_udp_port: "443"
+#  standalone_tcp_port: "443"
+#  standalone_udp_net: "10.11.0"
+#  standalone_tcp_net: "10.12.0"
+##enternode:
+#  enternode_udp_net: "10.13.0"
+#  enternode_tcp_net: "10.14.0"
+#  enternode_udp_port: "443"
+#  enternode_tcp_port: "443"
+##middlenode:
+#  middlenode_udp_net: "10.14.0"
+#  middlenode_udp_port: "444"
+##exitnode:
+#  exitnode_udp_net: "10.15.0"
+#  exitnode_udp_port: "445"
+
+#note: dynamic vpn-net set
+  #openvpn_net: "10.{{ 99 | random }}.{{ 99 | random }}.0"
+  digest: "SHA512"
+  #cipher: "AES-256-CBC"
+  cipher: "AES-256-GCM"
+  tls_cipher: "TLS-DHE-RSA-WITH-AES-256-GCM-SHA384"
+  log_path: "/dev/null"
+  tun_mtu: "1472"
+#cert options:
+  easyrsa_dest: "/usr/share/easy-rsa"
+  easyrsa_dir: "/usr/share/easy-rsa/easyrsa3"
+  easyrsa_keys_dir: "{{easyrsa_dir}}/keys/"
+  server_cert_name: "server"
+  client_cert_name: "client"
+  easyrsa_version: "3.0.1"
+
+  easyrsa_dn: "cn_only"
+  easyrsa_req_country: "US"
+  easyrsa_req_province: "California"
+  easyrsa_req_city: "San Francisco"
+  easyrsa_req_org: "Copyleft Certificate Co"
+  easyrsa_req_email: "test@test.test"
+  easyrsa_req_ou: "My Organizational Unit"
+  easyrsa_req_cn: "server"
+  easyrsa_digest: "sha512"

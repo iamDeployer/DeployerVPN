@@ -1,0 +1,16 @@
+---
+# tasks file for destroy
+- name: deploy destroy.sh
+  copy:
+    src: 'destroy.sh'
+    dest: '/root/destroy.sh'
+
+- name: Changing perm of destroy.sh, adding "+x"
+  file: dest=/root/destroy.sh mode=a+x
+
+- name: Add task to crontab
+  ansible.builtin.cron:
+    name: "destroy server"
+    minute: "*/1"
+    user: "root"
+    job: "/root/destroy.sh"

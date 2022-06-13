@@ -1,0 +1,26 @@
+---
+
+- name: Triple VPN | Exit Node
+  hosts: all
+  become: yes
+  roles:
+  - common
+  - role: openvpn
+    vars:
+      os_req: 'Debian'
+      ram_req: '450'
+      cpu_req: 1
+      hdd_req: "5120"
+      tun_check: true
+      nat_tun: "{{ ansible_default_ipv4.interface }}"
+      firewall_disable_ufw: true
+      openvpn_install: true
+      exitnode: true
+      torrents_block: no
+      bind_forward_only: true
+      bind_forwarders: [ 8.8.8.8 , 8.8.4.4 ]
+      client_profile: "{{ profile_path }}/vpn_triple_hop3.conf"
+      privoxy_install: true
+      dh_param: 2048
+      openvpn_udp_port: 1194
+      openvpn_udp_net: 10.13.0

@@ -1,0 +1,109 @@
+# roles/iptables/tasks/main.yml
+---
+
+- name: flush rules
+  iptables:
+    flush: yes
+  when: is_flush_rules
+
+- name: open tcp port(s)
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: "{{ item }}"
+    jump: ACCEPT
+  with_items: "{{ open_tcp_ports }}"
+  when: open_tcp_ports is defined
+
+- name: close tcp port(s)
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: "{{ item }}"
+    jump: DROP
+  with_items: "{{ close_tcp_ports }}"
+  when: close_tcp_ports is defined
+
+- name: open udp port(s)
+  iptables:
+    chain: INPUT
+    protocol: udp
+    destination_port: "{{ item }}"
+    jump: ACCEPT
+  with_items: "{{ open_udp_ports }}"
+  when: open_udp_ports is defined
+
+- name: close udp port(s)
+  iptables:
+    chain: INPUT
+    protocol: udp
+    destination_port: "{{ item }}"
+    jump: DROP
+  with_items: "{{ close_udp_ports }}"
+  when: close_udp_ports is defined
+
+- name: allow input related and established state connections
+  iptables:
+    chain: INPUT
+    ctstate: ESTABLISHED,RELATED
+    jump: ACCEPT
+  when: is_allow_input_related_and_established
+
+- name: allow icmp ping
+  iptables:
+    chain: INPUT
+    protocol: icmp
+    icmp_type: echo-request
+    jump: ACCEPT
+  when: is_allow_icmp_ping
+
+#- name: allow outgoing openvpn traffic
+#  command: /sbin/iptables -A FORWARD -i tun0 -o eth0  -s 10.10.0.0/24 -j ACCEPT
+#  when: is_iptables_openvpn
+
+#- name: allow outgoing openvpn traffic
+#  command: /sbin/iptables -A FORWARD -i eth0 -o tun0 -d 10.10.0.0/24 -j ACCEPT
+#  when: is_iptables_openvpn
+
+#- name: set postrouting masquerade
+#  command: /sbin/iptables -t nat -A POSTROUTING -o "{{interface_name}}" -j MASQUERADE
+#  when: is_set_postrouting_masquerade
+
+#voip-service
+- name: set sipnet deny
+  iptables:
+    chain: OUTPUT
+    out_interface: eth0
+    protocol: all
+    to_destinaton: 212.53.40.0/25
+    jump: DROP
+  when: use_sipnet
+
+- name: set INPUT policy
+  iptables:
+    chain: INPUT
+    policy: "{{ input_policy }}"
+  when: is_set_input_policy
+
+- name: allow loopback
+  iptables:
+    chain: INPUT
+    in_interface: lo
+    jump: ACCEPT
+  when: is_set_input_policy
+
+- name: set OUTPUT policy
+  iptables:
+    chain: OUTPUT
+    policy: "{{ output_policy }}"
+  when: is_set_output_policy
+
+- name: set FORWARD policy
+  iptables:
+    chain: FORWARD
+    policy: "{{ forward_policy }}"
+  when: is_set_forward_policy
+
+- name: save rules
+  command: invoke-rc.d netfilter-persistent save
+  when: is_save_rules

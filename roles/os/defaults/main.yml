@@ -1,0 +1,28 @@
+# roles/os/defaults/main.yml
+---
+
+#default options:
+logrotate_configure: false
+cron_configure: false
+fw_configure: false
+
+#ssh options
+ssh_port: 3454
+ssh_allow_pubkey: 'yes'
+ssh_allow_root: 'no'
+ssh_password_auth: 'yes'
+# TMP 
+username: ""
+user_password: ""
+
+#sudo
+use_sudo: false
+
+#users:
+# ssh_pubkey: ''
+#fail2ban:
+fail2ban_loglevel: INFO
+fail2ban_logpath: '/var/log/fail2ban.log'
+fail2ban_default_bantime: '3600'
+fail2ban_default_findtime: '3600'
+fail2ban_default_maxretry: '3'

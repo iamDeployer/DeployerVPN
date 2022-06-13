@@ -1,0 +1,7 @@
+- name: Disable LOGS
+  hosts: all
+  become: yes
+  vars:
+  
+  roles:
+    - logs

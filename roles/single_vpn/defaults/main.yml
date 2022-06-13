@@ -23,7 +23,7 @@ easyrsa_remove_old_keys: no
 openvpn_port: 443
 # протоколы оба используем, пока уброл эту переменную
 # openvpn_protocol: udp
-nat_tun: eth0
+nat_tun: "{{ ansible_default_ipv4.interface }}"
 profile_path: ~/openvpn_profiles
 
 openvpn_udp_net: 10.11.0.0

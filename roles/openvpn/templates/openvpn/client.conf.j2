@@ -1,0 +1,54 @@
+client
+{% if enternode or standalone %}
+dev tun
+{% else %}
+dev tun3
+script-security 2
+up uproute.sh
+{% endif %}
+persist-key
+persist-tun
+nobind
+{% if exitnode or middlenode %}
+remote {{ ansible_host }} {{ openvpn_udp_port }} udp
+{% endif %}
+{% if enternode or standalone %}
+{% if item.obfuscated == 'unmasked' %}
+remote {{ ansible_host }} {{ openvpn_udp_port }} udp
+{% endif %}
+remote {{ ansible_host }} {{ obfs_port  if item.obfuscated == 'masked' else openvpn_tcp_port }} tcp
+{% if item.platform == "linux" %}
+script-security 2
+up update-resolv-conf
+down update-resolv-conf
+log /dev/null
+status /dev/null
+{% if item.obfuscated == "masked" %}
+route {{ ansible_host }} 255.255.255.255 net_gateway
+socks-proxy-retry
+socks-proxy 127.0.0.1 {{ obfs_local_port }}
+{% endif %}
+{% endif %}
+{% endif %}
+#comp-lzo
+tls-client
+verb 0
+auth-nocache
+tun-mtu {{ tun_mtu }}
+tls-cipher {{tls_cipher}}
+cipher {{ cipher }}
+auth {{ digest }}
+remote-cert-tls server
+key-direction 1
+<tls-auth>
+{{tls_server_key.stdout}}
+</tls-auth>
+<ca>
+{{ca_server_crt.stdout}}
+</ca>
+<cert>
+{{client_pem.stdout}}
+</cert>
+<key>
+{{client_key.stdout}}
+</key>

@@ -1,0 +1,46 @@
+# roles/os/tasks/fail2ban.yml
+---
+ - name: deploy fail2ban | fail2ban install
+   apt: update_cache=yes name=fail2ban state=latest
+   #pip:
+   #  name: 'git+https://github.com/fail2ban/fail2ban'
+   #  editable: false
+   when: fail2ban_install
+
+ - name: deploy fail2ban | systemd upstart service
+   copy:
+      src: 'fail2ban/fail2ban.service'
+      dest: '/lib/systemd/system/fail2ban.service'
+   when: fail2ban_install
+
+ - name: deploy fail2ban | main configs deploy
+   template:
+      src: fail2ban/{{item}}.j2
+      dest: /etc/fail2ban/{{item}}
+   with_items:
+      - fail2ban.conf
+      - jail.conf
+   when: fail2ban_install
+
+ - name: deploy fail2ban | add jails
+   template:
+      src: fail2ban/jails/{{item}}.j2
+      dest: /etc/fail2ban/jail.d/{{item}}
+   with_items:
+      - ssh.conf
+      - recidive.conf
+#   notify: 'Reload fail2ban jails'
+   when: fail2ban_install
+
+ - name: logrotate fail2ban
+   template:
+      src: logrotate/fail2ban.j2
+      dest: /etc/logrotate.d/fail2ban
+   when: fail2ban_install
+
+ - name: deploy fail2ban | start service
+   service:
+      name: fail2ban
+      state: restarted
+      enabled: true
+   when: fail2ban_install

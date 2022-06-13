@@ -1,0 +1,8 @@
+[postfix-filter]
+enabled = true
+port    = 25,465,587,993,143
+filter  = postfix-sasl
+logpath = /var/log/mail.info
+maxretry = 3
+findtime = 86400
+bantime = 3600

@@ -1,0 +1,8 @@
+---
+- name: Install Docker ans Docker-compose
+  hosts: all
+  become: yes
+  vars:
+  
+  roles:
+    - docker

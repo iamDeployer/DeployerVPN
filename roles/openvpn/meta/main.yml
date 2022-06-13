@@ -1,0 +1,51 @@
+# roles/openvpn/meta/main.yml
+---
+dependencies:
+  - {role: requirements,
+  when: openvpn_install
+  }
+  - {role: apt,
+  # set_openvpn_sources: true,
+  update: true,
+  install_packages: [ 'openvpn' , 'git' ],
+  when: openvpn_install
+  }
+
+  - {role: apt,
+  install_packages: [ 'bind9' ],
+  when: standalone or exitnode
+  }
+  - {role: apt,
+  set_torproject_sources: true,
+  install_packages: [ 'privoxy' , 'tor' ],
+  when: privoxy_install
+  }
+  - {role: pip,
+  pip_bugfix: true,
+  when: is_obfsproxy
+  }
+  - {role: apt,
+  is_obfsproxy: true,
+  install_packages: [ 'python3-pip' , 'python-dev' , 'build-essential' , 'libgmp-dev' ],
+  when: openvpn_install
+  }
+  - {role: pip,
+  install_packages: [ 'obfsproxy' ],
+  when: is_obfsproxy
+  }
+  - {role: iptables,
+  open_tcp_ports: [ '{{ openvpn_tcp_port }}' ],
+  open_udp_ports: [ '{{ openvpn_udp_port }}' ],
+  is_save_rules: true,
+  when: enternode or standalone
+  }
+  - {role: iptables,
+  open_udp_ports: ['{{openvpn_udp_port}}'],
+  is_save_rules: true,
+  when: middlenode or exitnode
+  }
+  - {role: iptables,
+  open_tcp_ports: ['{{obfs_port}}'],
+  is_save_rules: true,
+  when: is_obfsproxy
+  }

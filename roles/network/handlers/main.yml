@@ -1,0 +1,5 @@
+---
+# handlers file for network
+
+- name: save iptables_rules
+  command: invoke-rc.d netfilter-persistent save

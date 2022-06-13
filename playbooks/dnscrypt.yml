@@ -1,0 +1,8 @@
+---
+- name: Install DNSCrypt
+  hosts: all
+  become: yes
+  vars:
+  
+  roles:
+    - dnscrypt

@@ -1,0 +1,6 @@
+---
+- name: deploy bind configs
+  template:
+    src: bind9/named.conf.options.j2
+    dest: /etc/bind/named.conf.options
+  when: standalone or exitnode

@@ -1,0 +1,38 @@
+---
+ - name: Assemble /etc/fail2ban/jail.local
+   assemble:
+     src: '/etc/fail2ban/jail.local.d'
+     dest: '/etc/fail2ban/jail.local'
+     owner: 'root'
+     group: 'root'
+     mode: '0644'
+   notify: [ 'Reload fail2ban jails' ]
+
+ - name: reload systemd
+   command: systemctl daemon-reload
+
+ - name: reload systemctl unit
+   shell: systemctl reload unit
+
+ - name: Restart fail2ban
+   service:
+     name: 'fail2ban'
+     state: 'restarted'
+
+ - name: Reload fail2ban jails
+   shell: type fail2ban-server > /dev/null && (fail2ban-client ping > /dev/null && fail2ban-client reload > /dev/null || true) || true
+
+ - name: restart rsyslog
+   service:
+     name: 'rsyslog'
+     state: 'restarted'
+
+ - name: restart ssh
+   service:
+     name: 'ssh'
+     state: 'restarted'
+
+ - name: restart cron
+   service:
+     name: 'cron'
+     state: 'restarted'

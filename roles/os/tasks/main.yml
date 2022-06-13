@@ -1,0 +1,15 @@
+# roles/os/tasks/main.yml
+---
+ - include: rsyslog.yml tags=rsyslog
+ - include: sudouser.yml tags=sudouser
+ - include: logrotate.yml tags=logrotate
+ - include: fail2ban.yml tags=fail2ban
+ - include: ssh.yml tags=ssh
+ - include: cron.yml tags=cron
+ - include: finish.yml tags=finish
+ - name: Restart sshd
+   service:
+        name: sshd
+        state: restarted
+        
+#  - include: ../../common/tasks/cleanup.yml

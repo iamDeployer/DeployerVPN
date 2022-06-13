@@ -1,0 +1,40 @@
+# tasks file for docker
+---
+
+- name: Install dependens 
+  apt:
+    name: "{{item}}"
+    state: present
+    update_cache: yes
+  loop:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg-agent
+    - software-properties-common
+
+- name: Add Docker’s official GPG key
+  apt_key:
+     url: https://download.docker.com/linux/ubuntu/gpg
+     state: present
+
+- name: Add repository docker
+  apt_repository:
+     repo: deb https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+     state: present
+
+- name: install docker
+  apt:
+    name: "{{item}}"
+    state: latest
+    update_cache: yes
+  loop:
+     - docker-ce
+     - docker-ce-cli
+     - containerd.io
+
+- name: Install docker-compose from official github repo
+  get_url:
+    url : https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+    dest: /usr/local/bin/docker-compose
+    mode: 'u+x,g+x'

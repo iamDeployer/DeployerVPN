@@ -1,0 +1,10 @@
+SocksPort 9050 # Default: Bind to localhost:9050 for local connections.
+SocksPolicy accept *
+DNSPort 9053
+DNSListenAddress 0.0.0.0
+AutomapHostsOnResolve 1
+AutomapHostsSuffixes .exit,.onion
+#
+#StrictExitNodes 1
+#ExitNodes 127.0.0.1
+ExitNodes {us}

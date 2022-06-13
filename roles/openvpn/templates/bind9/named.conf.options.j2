@@ -1,0 +1,20 @@
+{% if standalone %}
+acl mynetwork { {{openvpn_udp_net}}.0/24 ; {{openvpn_tcp_net}}.0/24; 127.0.0.1; };
+{% endif %}
+{% if exitnode %}
+acl mynetwork { {{openvpn_udp_net}}.0/24 ; 127.0.0.1; };
+{% endif %}
+options {
+        directory "/var/cache/bind";
+        allow-query { mynetwork; };
+        dnssec-validation yes;
+        max-ncache-ttl 3600;
+        max-cache-ttl 3600;
+        auth-nxdomain no;    # conform to RFC1035
+        listen-on-v6 { none; };
+        {% if bind_forward_only %}forward only;
+        {% endif %}
+        {% if bind_forwarders|length > 0 %}forwarders { {{ bind_forwarders|join('; ') }}; };
+        {% endif %}
+};
+include "/etc/bind/bind.keys";

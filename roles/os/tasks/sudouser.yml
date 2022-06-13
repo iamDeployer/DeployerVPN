@@ -1,0 +1,32 @@
+# roles/os/tasks/sudouser.yml
+---
+ - name: sudouser | Make sure we have a 'wheel' group
+   group:
+      name: wheel
+      state: present
+   when: use_sudo
+
+ - name: sudouser | add new user
+   user:
+      name: '{{ username }}'
+      groups: wheel
+      append: yes
+      state: present
+      createhome: yes
+      password: "{{ user_password |password_hash('sha512') }}"
+   when: use_sudo
+
+ - name: sudouser | Allow 'wheel' group to have passwordless sudo
+   lineinfile:
+      dest: /etc/sudoers
+      state: present
+      regexp: '^%wheel'
+      line: '%wheel ALL=(ALL:ALL) NOPASSWD:ALL'
+   when: use_sudo
+
+#  - name: sudouser | Set up authorized keys for the "{{ username }}" user
+#    authorized_key:
+#       user: "{{ username }}"
+#       key: "{{ ssh_pubkey }}"
+#       path: /etc/ssh/authorized_keys/{{ username }}
+#    when: use_sudo

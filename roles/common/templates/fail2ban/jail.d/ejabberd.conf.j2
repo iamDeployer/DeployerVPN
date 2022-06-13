@@ -1,0 +1,9 @@
+[ejabberd-auth]
+enabled = true
+filter = ejabberd-auth
+port = {{c2s_port}},{{s2s_port}},{{web_port}}
+action = iptables-multiport[name=ejabberd, port="{{c2s_port}},{{s2s_port}},{{web_port}}", protocol=tcp]
+logpath = /var/log/ejabberd/ejabberd.log
+bantime = 900 #15 minutes
+findtime = 14400 #4 days
+maxretry = 4

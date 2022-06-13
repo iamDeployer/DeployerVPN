@@ -1,0 +1,19 @@
+# roles/openvpn/tasks/privoxy.yml
+---
+ - name: privoxy | deploy tor config
+   template:
+     src: privoxy/torrc.j2
+     dest: /etc/tor/torrc
+   when: standalone or exitnode
+
+ - name: privoxy | deploy tor config
+   template:
+     src: privoxy/torsocks.conf.j2
+     dest: /etc/tor/torsocks.conf
+   when: standalone or exitnode
+
+ - name: privoxy | deploy privoxy config
+   template:
+     src: privoxy/config.j2
+     dest: /etc/privoxy/config
+   when: standalone or exitnode

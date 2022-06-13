@@ -1,0 +1,6 @@
+# roles/iptables/meta/main.yml
+---
+dependencies:
+  - {role: apt,
+  install_packages: [ 'netfilter-persistent' , 'iptables-persistent' ],
+  }

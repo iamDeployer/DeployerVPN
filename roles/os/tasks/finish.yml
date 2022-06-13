@@ -1,0 +1,7 @@
+# roles/os/tasks/finish.yml
+---
+ - name: deny 22 port by next reboot
+   lineinfile:
+      dest: /etc/iptables/rules.v4
+      regexp: '-A INPUT -p tcp -m tcp --dport {{ansible_port}} -j ACCEPT'
+      state: absent

@@ -1,0 +1,68 @@
+---
+#- name: get securebox current version
+#  local_action: shell /bin/cat ../version
+#  register: sb_curr_ver
+#- name: get securebox installed version
+#  shell: cat /etc/securebox_version
+#  register: sb_installed_ver
+
+#- name: check current & installed version
+#  assert:
+#    that: " sb_installed_ver.stdout == sb_curr_ver.stdout"
+#    msg: "securebox versions a different: curr {{sb_curr_ver.stdout}} vs installed {{sb_installed_ver.stdout}}"
+
+- name: Check if ufw package is installed (on Ubuntu).
+  command: service ufw status
+  args:
+    warn: false
+  register: ufw_installed
+  ignore_errors: true
+  changed_when: false
+  when:
+    - firewall_disable_ufw
+  check_mode: false
+
+- name: Disable the ufw firewall (on Ubuntu, if configured).
+  service:
+    name: ufw
+    state: stopped
+    enabled: false
+  when:
+    - firewall_disable_ufw
+    - ufw_installed.rc == 0
+
+- name: check HW/Software requirements | OS type
+  assert:
+    that: "ansible_os_family == '{{os_req}}'"
+    msg: we support only Linux {{os_req}} distribution
+
+- name: check HW/Software requirements | TUN check
+  modprobe:
+    name: tun
+  register: tun_mod
+  when: tun_check
+
+- name: check HW/Software requirements | TUN exception
+  assert:
+    that: "tun_mod.state == 'present'"
+    msg: "require TUN module exists"
+  when: tun_check
+
+- name: check HW/Software requirements | Memory
+  assert:
+    that: "ansible_memtotal_mb >= {{ram_req}}"
+    msg: RAM is {{ ansible_memtotal_mb }} MB. RAM must be >= {{ram_req}}
+
+- name: check HW/Software requirements | CPU
+  assert:
+    that: "ansible_processor_count >= {{cpu_req}}"
+    msg: Processor count is {{ansible_processor_count}}. Count must be >= {{cpu_req}}
+
+#- name: check HW/Software requirements | get Disk name
+#  shell: "/bin/lsblk -l |grep disk| head -1|awk '{print $1}'"
+#  register: disks
+
+#- name: check HW/Software requirements | HDD
+#  assert:
+#    that: "{{ ((ansible_devices[disks.stdout]['sectors']|int) * (ansible_devices[disks.stdout]['sectorsize']|int)/1024/1024)|int }} >= {{ hdd_req|int}} "
+#    msg: "Have no anough Disk size. Disk size is {{ ((ansible_devices[disks.stdout]['sectors'])|int * (ansible_devices[disks.stdout]['sectorsize']|int)/1024/1024)|int }}MB. Size must be >= {{hdd_req|int}}MB"

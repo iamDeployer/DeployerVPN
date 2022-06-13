@@ -1,0 +1,19 @@
+[asterisk-tls]
+enabled = true
+port    = {{ asterisk_tls_port }}
+protocol = tcp
+filter  = asterisk
+logpath = /var/log/asterisk/messages
+maxretry = 3
+findtime = 86400
+bantime = 3600
+
+[asterisk-udp]
+enabled = true
+port    = 5060
+protocol = udp
+filter  = asterisk
+logpath = /var/log/asterisk/messages
+maxretry = 3
+findtime = 86400
+bantime = 3600

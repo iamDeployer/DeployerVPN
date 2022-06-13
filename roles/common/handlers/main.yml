@@ -1,0 +1,133 @@
+#roles/common/handlers/main.yml
+---
+- name: enable ejabberd service
+  service:
+    enabled: yes
+    name: ejabberd
+
+- name: restart fail2ban
+  service:
+    name: fail2ban
+    state: restarted
+
+- name: restart asterisk
+  service:
+     name: asterisk
+     enabled: yes
+     state: restarted
+
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted
+
+- name: restart syslog
+  service:
+    name: syslog
+    state: restarted
+
+- name: restart openvpn@sipnet
+  service:
+    name: openvpn@sipnet
+    state: restarted
+
+- name: restart bind9
+  service:
+    name: bind9
+    state: restarted
+
+- name: bind9 restart
+  service:
+    name: bind9
+    state: restarted
+
+- name: restart networking
+  service:
+    name: networking
+    state: restarted
+  async: 0
+  poll: 0
+  ignore_errors: true
+
+- name: restart saslauthd
+  service:
+    name: saslauthd
+    state: restarted
+
+- name: restart cyrus
+  service:
+    name: cyrus-imapd
+    daemon-reload: yes
+    enabled: yes
+    state: restarted
+
+- name: restart clamav
+  service:
+    name: clamav-daemon
+    state: restarted
+
+- name: restart clamsmtp
+  service:
+    name: clamsmtp
+    state: restarted
+
+- name: restart opendkim
+  service:
+    name: opendkim
+    state: restarted
+
+- name: restart postfix
+  service:
+    name: postfix
+    state: restarted
+
+- name: restart cron
+  service:
+    name: cron
+    state: restarted
+
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted
+
+- name: restart postgrey
+  service:
+    name: postgrey
+    state: restarted
+
+- name: restart spamassassin
+  service:
+    name: spamassassin
+    state: restarted
+
+- name: restart squid3
+  service:
+    name: squid3
+    enabled: yes
+    state: restarted
+
+- name: save iptables_rules
+  command: invoke-rc.d netfilter-persistent save
+
+- name: privoxy_restart
+  service:
+    name: privoxy
+    state: restarted
+
+- name: tor_restart
+  service:
+    name: tor
+    state: restarted
+
+- name: openvpn restart
+  systemd:
+    state: restarted
+    daemon-reload: yes
+    name: openvpn
+
+- name: reboot server
+  shell: nohup bash -c 'sleep 2 && shutdown -r now' &
+  async: 0
+  poll: 0
+  ignore_errors: true

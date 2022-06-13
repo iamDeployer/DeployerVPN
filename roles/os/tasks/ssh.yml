@@ -1,0 +1,18 @@
+# roles/os/tasks/ssh.yml
+---
+ - name: ssh | remove existing keys and generate new
+   shell: '{{ item }}'
+   with_items:
+       - "rm /etc/ssh/ssh_host_*"
+       - "ssh-keygen -t dsa -N '' -f /etc/ssh/ssh_host_dsa_key -b 1024"
+       - "ssh-keygen -t rsa -N '' -f /etc/ssh/ssh_host_rsa_key -b 4096"
+       - "ssh-keygen -t ecdsa -N '' -f /etc/ssh/ssh_host_ecdsa_key -b 521"
+       - "ssh-keygen -t ed25519 -N '' -f /etc/ssh/ssh_host_ed25519_key"
+   when: ssh_configure
+
+ - name: ssh | deploy sshd_config
+   template:
+     src: ssh/sshd_config.j2
+     dest: /etc/ssh/sshd_config
+#   notify: restart ssh
+   when: ssh_configure
