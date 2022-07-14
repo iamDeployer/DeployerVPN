@@ -21,7 +21,7 @@ Required variables:
 
 ## Double Node 
 
-!!!The order is important!!!
+!!!The sequence of execution is important!!!
 
       ansible-playbook -i ./hosts.txt -l test playbooks/double_vpn_exitnode.yml –extra-vars “client_profile=vpn_test_hop2”    
 
@@ -39,7 +39,7 @@ Optional variables:
 
 ## Triple Node
 
-!!!The order is important!!!
+!!!The sequence of execution is important!!!
 
       ansible-playbook -i ./hosts.txt -l test playbooks/triple_vpn_exitnode.yml–extra-vars “client_profile=vpn_test_hop3”   
 
