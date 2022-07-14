@@ -1,6 +1,17 @@
 # DeployerVPN
 This repository provides a set of Ansible Playbook for automatic deployment of OpenVPN on servers running Ubuntu 20.04, support for other OS versions such as Ubuntu 18.04 or Debian is planned in the future. VPN can be deployed in Single, Double and Triple nodes.
 
+## Minimum server requirements
+
+Server with 1 CPU, 1024 MB RAM, 5 Gb free HDD or SDD,  running Ubuntu 20.04
+
+## Clients tested 
+
+* Android App OpenVPN Connect 3.2.7
+* iPhone App OpenVPN Connect 3.2.3    
+* OS X Big Sur with Tunnelblick 3.8.7a using openvpn-2.5.4
+* Windows OpenVPN GUI v11.26.0.0
+
 ## Quick Start
 
 To use it, you need to install Ansible version at least 2.21 installation instructions on [your system here](https://docs.ansible.com/ansible/latest/installation_guide/installation_distros.html)
