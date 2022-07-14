@@ -17,7 +17,7 @@ For convenience, you can edit the inventory file hosts.txt or pass parameters vi
       ansible-playbook -i ./hosts.txt -l test playbooks/vpn_standalone.yml –extra-vars “clientname=test profile_path=~/openvpn_profiles”  
 
 Required variables:
-* clientname: test - specify the name of the client, for example test
+* `clientname: test` - specify the name of the client, for example test
 
 ## Double Node 
 
@@ -26,16 +26,16 @@ Required variables:
       ansible-playbook -i ./hosts.txt -l test playbooks/double_vpn_exitnode.yml –extra-vars “client_profile=vpn_test_hop2”    
 
 Required variables:
-* client_profile: vpn_{client_name}_hop 2 - specify the profile name, change only the client name example vpn_test_hop2
+* `client_profile: vpn_{client_name}_hop2` - specify the profile name, change only the client name example vpn_test_hop2
 
       ansible-playbook -i ./hosts.txt -l test playbooks/double_vpn_enternode.yml –extra-vars “clientname=test nextsrv_client_profile=vpn_test_hop2 profile_path=~/openvpn_profiles”   
 
 Required variables:
-* clientname: test - specify the name of the client, for example test
-* nextsrv_client_profile: vpn_{client_name}_hop 2 - specify the profile name, example vpn_test_hop 2
+* `clientname: test` - specify the name of the client, for example test
+* `nextsrv_client_profile: vpn_{client_name}_hop2` - specify the profile name, example vpn_test_hop 2
 
 Optional variables:
-* profile_path: /root/openvpn_profiles - the path where to save the client connection file
+* `profile_path: /root/openvpn_profiles` - the path where to save the client connection file
 
 ## Triple Node
 
@@ -44,19 +44,19 @@ Optional variables:
       ansible-playbook -i ./hosts.txt -l test playbooks/triple_vpn_exitnode.yml–extra-vars “client_profile=vpn_test_hop3”   
 
 Required variables:
-* client_profile: vpn_{client_name}_shop 3 - specify the profile name, change only the client name example vpn_test_hop3
+* `client_profile: vpn_{client_name}_shop3` - specify the profile name, change only the client name example vpn_test_hop3
 
       ansible-playbook -i ./hosts.txt -l test playbooks/triple_vpn_middlenode.yml –extra-vars “client_profile=vpn_test_hop2 nextsrv_client_profile=vpn_test_hop3 ”   
 
 Required variables:
-* client_profile: vpn_{client_name}_hop 2 - specify the profile name, change only the client name example vpn_test_hop2
-* nextsrv_client_profile: vpn_{client_name}_hop3 - specify the profile name, change only the client name example vpn_test_hop3
+* `client_profile: vpn_{client_name}_hop2` - specify the profile name, change only the client name example vpn_test_hop2
+* `nextsrv_client_profile: vpn_{client_name}_hop3` - specify the profile name, change only the client name example vpn_test_hop3
 
       ansible-playbook -i ./hosts.txt -l test playbooks/triple_vpn_enternode.yml  –extra-vars “clientname=test nextsrv_client_profile=vpn_test_hop2 profile_path=~/openvpn_profiles”   
 
 Required variables:
-* clientname: test - specify the name of the client, for example test
-* nextsrv_client_profile: vpn_{client_name}_hop 2 - specify the profile name, example vpn_test_hop2
+* `clientname: test` - specify the name of the client, for example test
+* `nextsrv_client_profile: vpn_{client_name}_hop2` - specify the profile name, example vpn_test_hop2
 
 Optional variables:
 * profile_path: /root/openvpn_profiles - the path where to save the client connection file
