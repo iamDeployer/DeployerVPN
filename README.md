@@ -59,4 +59,4 @@ Required variables:
 * `nextsrv_client_profile: vpn_{client_name}_hop2` - specify the profile name, example vpn_test_hop2
 
 Optional variables:
-* profile_path: /root/openvpn_profiles - the path where to save the client connection file
+* `profile_path: /root/openvpn_profiles` - the path where to save the client connection file
