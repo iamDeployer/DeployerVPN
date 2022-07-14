@@ -3,11 +3,11 @@ This repository provides a set of Ansible Playbook for automatic deployment of O
 
 ## Quick Start
 
-To use it, you need to install Ansible version at least 2.21 installation instructions on your system here  https://docs.ansible.com/ansible/latest/installation_guide/installation_distros.html 
+To use it, you need to install Ansible version at least 2.21 installation instructions on [your system here](https://docs.ansible.com/ansible/latest/installation_guide/installation_distros.html)
 
 Next, download this repository
 
-git clone https://github.com/iamDeployer/DeployerVPN.git
+      git clone https://github.com/iamDeployer/DeployerVPN.git
 
 Go to the repository folder and launch Ansible Playbook
 For convenience, you can edit the inventory file hosts.txt or pass parameters via –extra-vars
