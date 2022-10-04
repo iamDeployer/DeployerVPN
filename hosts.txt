@@ -1,2 +1,2 @@
 [test]
-test-1          ansible_host=111.111.111.111     ansible_user=root   ansible_password=test_test
+test-1          ansible_host=111.111.111.111     ansible_user=root   ansible_password=root-passwd
